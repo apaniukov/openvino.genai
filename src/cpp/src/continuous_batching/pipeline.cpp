@@ -37,6 +37,12 @@ float get_load_time(std::chrono::steady_clock::time_point start_time) {
     auto stop_time = std::chrono::steady_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>(stop_time - start_time).count();
 }
+
+ov::AnyMap filter_inputs_embedder_properties(const ov::AnyMap& properties) {
+    ov::AnyMap filtered_properties = properties;
+    filtered_properties.erase("sampler_num_threads");
+    return filtered_properties;
+}
 }
 
 ContinuousBatchingPipeline::ContinuousBatchingPipeline( const std::filesystem::path& models_path,
@@ -60,7 +66,7 @@ ContinuousBatchingPipeline::ContinuousBatchingPipeline( const std::filesystem::p
 
     std::shared_ptr<InputsEmbedder> embedder;
     if (std::filesystem::exists(models_path / "openvino_text_embeddings_model.xml")) {
-        embedder = std::make_shared<InputsEmbedder>(models_path, device, vision_encoder_properties);
+        embedder = std::make_shared<InputsEmbedder>(models_path, device, filter_inputs_embedder_properties(vision_encoder_properties));
     }
 
     utils::print_scheduler_config_info(scheduler_config);
@@ -111,7 +117,7 @@ ContinuousBatchingPipeline::ContinuousBatchingPipeline(const std::shared_ptr<ov:
 
     std::shared_ptr<InputsEmbedder> embedder;
     if (std::filesystem::exists(models_path / "openvino_text_embeddings_model.xml")) {
-        embedder = std::make_shared<InputsEmbedder>(models_path, device, vision_encoder_properties);
+        embedder = std::make_shared<InputsEmbedder>(models_path, device, filter_inputs_embedder_properties(vision_encoder_properties));
     }
 
     utils::print_scheduler_config_info(scheduler_config);
@@ -160,7 +166,7 @@ ContinuousBatchingPipeline::ContinuousBatchingPipeline(
     auto generation_config = utils::from_config_json_if_exists(models_path);
     std::shared_ptr<InputsEmbedder> embedder;
     if (std::filesystem::exists(models_path / "openvino_text_embeddings_model.xml")) {
-        embedder = std::make_shared<InputsEmbedder>(models_path, device, properties_without_draft_model_without_gguf);
+        embedder = std::make_shared<InputsEmbedder>(models_path, device, filter_inputs_embedder_properties(properties_without_draft_model_without_gguf));
     }
 
     utils::print_scheduler_config_info(scheduler_config);
@@ -214,7 +220,7 @@ ContinuousBatchingPipeline::ContinuousBatchingPipeline(
         std::string weights_path = rt_info.at("__weights_path").as<std::string>();
         directory = std::filesystem::path(weights_path).parent_path();
         if (std::filesystem::exists(directory / "openvino_text_embeddings_model.xml")) {
-            embedder = std::make_shared<InputsEmbedder>(directory, device, properties_without_draft_model);
+            embedder = std::make_shared<InputsEmbedder>(directory, device, filter_inputs_embedder_properties(properties_without_draft_model));
         }
     }
 
@@ -265,13 +271,13 @@ ContinuousBatchingPipeline::ContinuousBatchingPipeline(
     if (embedder_config_dir_path.has_value()) {
         auto path = *embedder_config_dir_path;
         embedder =
-            std::make_shared<InputsEmbedder>(models_map, tokenizer, path, device, properties_without_draft_model);
+            std::make_shared<InputsEmbedder>(models_map, tokenizer, path, device, filter_inputs_embedder_properties(properties_without_draft_model));
     }
     else if (rt_info.find("__weights_path") != rt_info.end()) {
         std::string weights_path = rt_info.at("__weights_path").as<std::string>();
         directory = std::filesystem::path(weights_path).parent_path();
         if (std::filesystem::exists(directory / "openvino_text_embeddings_model.xml")) {
-            embedder = std::make_shared<InputsEmbedder>(directory, device, properties_without_draft_model);
+            embedder = std::make_shared<InputsEmbedder>(directory, device, filter_inputs_embedder_properties(properties_without_draft_model));
         }
     }
 
@@ -315,13 +321,13 @@ ContinuousBatchingPipeline::ContinuousBatchingPipeline(
     std::shared_ptr<InputsEmbedder> embedder = nullptr;
     if (embedder_config_dir_path.has_value()) {
         auto path = *embedder_config_dir_path;
-        embedder = std::make_shared<InputsEmbedder>(models_map, tokenizer, path, device, properties);
+        embedder = std::make_shared<InputsEmbedder>(models_map, tokenizer, path, device, filter_inputs_embedder_properties(properties));
     }
     else if (rt_info.find("__weights_path") != rt_info.end()) {
         std::string weights_path = rt_info.at("__weights_path").as<std::string>();
         directory = std::filesystem::path(weights_path).parent_path();
         if (std::filesystem::exists(directory / "openvino_text_embeddings_model.xml")) {
-            embedder = std::make_shared<InputsEmbedder>(directory, device, properties_without_draft_model);
+            embedder = std::make_shared<InputsEmbedder>(directory, device, filter_inputs_embedder_properties(properties_without_draft_model));
         }
     }
 
